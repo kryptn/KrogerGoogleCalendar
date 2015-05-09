@@ -1,0 +1,12 @@
+{
+    "EUID": "EUID",
+    "PASSWORD": "RELEVANT PASSWORD",
+    "EMAIL": "YOUR ACTUAL EMAIL",
+    "P12_KEY_FILE": "P12 FILE",
+    "GSERVEMAIL": "probablysomething@developer.gserviceaccount.com", 
+    
+    "HOME_URL": "https://vpnb-hdc.kroger.com/wps/myportal/,DanaInfo=greatpeople.kroger.com+sp_gp", 
+    "MAIN_URL": "http://greatpeople.me", 
+    "SCHEDULE_URL": "https://vpnb-cdc.kroger.com/EmpowerESS/,DanaInfo=wfm.kroger.com+Schedule.aspx", 
+    "SCOPE": "https://www.googleapis.com/auth/calendar"
+}
