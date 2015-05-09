@@ -9,11 +9,22 @@ from functools import wraps
 from contextlib import contextmanager
 import oauth2client
 import datetime
+import pickle
 import json
 import re
 
 with open('settings.json') as f:
     SETTINGS = json.loads(f.read())
+
+@contextmanager
+def lazydb(filename):
+    with open(filename) as f:
+        db = pickle.load(f)
+
+    yield db
+    
+    with open(filename,'w') as f:
+        pickle.dump(db, f)
 
 def make_datetime(dates, times):
     dt = {'year':2015,
@@ -28,15 +39,17 @@ def make_datetime(dates, times):
     dt['hour'] = times[0]
     dt['minute'] = times[1]
 
-    return datetime.datetime(**dt)+datetime.timedelta(minutes=60*7)
+    return datetime.datetime(**dt)
 
     
 
 def build_event(start, end):
     """ Builds calendar object to pass to the api """
     event = {'summary': 'Work',
-             'start': {'dateTime': start.isoformat('T') + 'Z'},
-             'end': {'dateTime': end.isoformat('T') + 'Z'},
+             'start': {'dateTime': start.isoformat('T'),
+                       'timeZone': 'America/Los_Angeles'},
+             'end': {'dateTime': end.isoformat('T'),
+                     'timeZone': 'America/Los_Angeles'},
              'attendees': [{'email': SETTINGS['EMAIL'],
                             'responseStatus': 'accepted'},],
              }
@@ -96,23 +109,27 @@ def fix_sessions(browser):
     browser.find_element_by_name('postfixSID').click()
     browser.find_element_by_name('btnContinue').click()
 
+
 def parse_calendar(soup):
     """
     Parses the calendar found after logging in
     regex is to get only the day items, which have class%d in their classes
     """
     schema = ('date','time','duration')
-    sched = []
+    sched = {}
+    now = datetime.datetime.now()
     for day in soup.find_all('li', class_=re.compile('[1-7]')):
         d = list(day.stripped_strings)
         if len(d) > 1:
             d = dict(zip(schema, d))
+            r = {}
             start, end = d['time'].split('-')
-            d['start'] = make_datetime(d['date'], start)
-            d['duration'] = float(d['duration'][7:])
-            d['end'] = d['start']+datetime.timedelta(minutes=60*d['duration'])
-
-            sched.append(d)
+            r['start'] = make_datetime(d['date'], start)
+            r['end'] = make_datetime(d['date'], end)
+            r['id'] = None
+            
+            if r['start'] > now:
+                sched[d['date']] = r
 
     return sched
 
@@ -135,11 +152,33 @@ def get_source(debug=False):
             if debug: print browser.title
         soup = BeautifulSoup(browser.page_source)
     return soup
-    
-def main():
+
+def get_schedule():
     soup = get_source()
     schedule = parse_calendar(soup)
     return schedule
+
+def add_event(day):
+    calendar = api_service('calendar','v3')
+    event = build_event(day['start'],day['end'])
+    created = calendar.events().insert(calendarId='primary',body=event).execute()
+    day['id'] = created['id']
+    return day
+
+def update():
+    now = datetime.datetime.now()
+    schedule = get_schedule()
+    
+    with lazydb('lazydb.pk') as db:
+        for k, v in db.items():
+            if v['start'] < now:
+                del db[k]
+        for k, v in schedule.items():
+            if k not in db.keys():
+                r = add_event(v)
+                db[k] = r
+
+
 
 
     
