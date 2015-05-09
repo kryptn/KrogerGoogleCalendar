@@ -127,29 +127,28 @@ def parse_calendar(soup):
             r['start'] = make_datetime(d['date'], start)
             r['end'] = make_datetime(d['date'], end)
             r['id'] = None
-            
             if r['start'] > now:
                 sched[d['date']] = r
 
     return sched
 
 @display
-def get_source(debug=False):
+def get_source():
     """ Gets page source for schedule """
     with driver() as browser:
-        if debug: print browser.title
+        if DEBUG: print browser.title
         enter_info(browser,
                    SETTINGS['EUID'],
                    SETTINGS['PASSWORD'])
-        if debug: print browser.title
+        if DEBUG: print browser.title
         if 'Confirm' in browser.title:
             fix_sessions(browser)
-        if debug: print browser.title
+        if DEBUG: print browser.title
         browser.get(SETTINGS['SCHEDULE_URL'])
-        if debug: print browser.title
+        if DEBUG: print browser.title
         if 'Confirm' in browser.title:
             fix_sessions(browser)
-            if debug: print browser.title
+            if DEBUG: print browser.title
         soup = BeautifulSoup(browser.page_source)
     return soup
 
@@ -170,15 +169,20 @@ def update():
     schedule = get_schedule()
     
     with lazydb('lazydb.pk') as db:
+
         for k, v in db.items():
             if v['start'] < now:
+                if DEBUG: print "Old event being removed", v['start']
                 del db[k]
+
         for k, v in schedule.items():
             if k not in db.keys():
                 r = add_event(v)
+                if DEBUG: print "New event inserted", r['start']
                 db[k] = r
-
-
+            else:
+                if DEBUG: print "Event already exists", k
+DEBUG = True
 
 
     
