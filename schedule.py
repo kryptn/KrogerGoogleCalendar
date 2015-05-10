@@ -18,6 +18,7 @@ with open('settings.json') as f:
 
 @contextmanager
 def lazydb(filename):
+    # check if file exists
     with open(filename) as f:
         db = pickle.load(f)
 
@@ -25,6 +26,29 @@ def lazydb(filename):
     
     with open(filename,'w') as f:
         pickle.dump(db, f)
+
+@contextmanager
+def driver():
+    """ Creates a selenium webdriver object to manipulate """
+    try:
+        b = webdriver.Firefox()
+        b.get(SETTINGS['MAIN_URL'])
+        yield b
+    finally:
+        b.quit()
+
+def display(f):
+    """ Wrapper for pyvd display object """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            d = Display(visible=0, size=(800,600))
+            d.start()
+            r = f(*args, **kwargs)
+        finally:
+            d.stop()    
+        return r
+    return wrapper
 
 def make_datetime(dates, times):
     dt = {'year':2015,
@@ -65,35 +89,6 @@ def api_service(endpoint, version):
 
     service = build(endpoint, version, http=creds.authorize(Http()))
     return service
-
-def update_calendar(schedule):
-    store = []
-    calendar = api_service('calendar','v3')
-    for i in schedule:
-        event = build_event(i['start'],i['end'])
-        created = calendar.events().insert(calendarId='primary', body=event).execute()
-        i['id'] = created['id']
-        store.append(i)
-    return store
-
-def display(f):
-    """ Wrapper for pyvd display object """
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        d = Display(visible=0, size=(800,600))
-        d.start()
-        r = f(*args, **kwargs)
-        d.stop()
-        return r
-    return wrapper
-
-@contextmanager
-def driver():
-    """ Creates a selenium webdriver object to manipulate """
-    b = webdriver.Firefox()
-    b.get(SETTINGS['MAIN_URL'])
-    yield b
-    b.quit()
 
 def enter_info(browser, user, pwd):
     """ Enters relevant info into the login page """
