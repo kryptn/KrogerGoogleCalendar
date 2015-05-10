@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from contextlib import contextmanager
 
 from bs4 import BeautifulSoup
@@ -20,7 +21,7 @@ def driver():
         browser = webdriver.Firefox()
         yield browser
     finally:
-        b.quit()
+        browser.quit()
         display.stop()
 
 
@@ -41,8 +42,8 @@ class KrogerBrowser(object):
 
     def login(self, browser):
         """ Enters relevant info into the login page """
-        browser.find_element_by_name('KSWUSER').send_keys(self.user)
-        browser.find_element_by_name('PWD').send_keys(self.pwd)
+        browser.find_element_by_name('KSWUSER').send_keys(self.euid)
+        browser.find_element_by_name('PWD').send_keys(self.password)
         browser.find_element_by_class_name('btn').click()
 
     def fix_sessions(self, browser):
@@ -79,7 +80,7 @@ class KrogerBrowser(object):
     def get_schedule_source(self):
         with driver() as browser:
             self.navigate(browser, self.main_url)
-            login(browser)
+            self.login(browser)
             if 'Confirm' in browser.title:
                 self.fix_sessions(browser)
             self.navigate(browser, self.schedule_url)

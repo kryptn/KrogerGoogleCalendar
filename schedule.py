@@ -42,7 +42,7 @@ def make_datetime(date, time):
 def build_event(start, end):
     """ Builds calendar object to pass to the api """
     event = {'summary': 'Work',
-             'location': SETTINGS['LOCATION']
+             'location': SETTINGS['LOCATION'],
              'start': {'dateTime': start.isoformat('T'),
                        'timeZone': SETTINGS['TIMEZONE']},
              'end': {'dateTime': end.isoformat('T'),
@@ -74,8 +74,8 @@ def add_event(day):
 
 def update():
     now = datetime.now()
-    browser = KrogerBrowser(SETTINGS['EUID'], SETTINGS['PWD'])
-    schedule = browser.pull_schedule()
+    browser = KrogerBrowser(SETTINGS['EUID'], SETTINGS['PASSWORD'])
+    schedule = browser.pull()
     
     with lazydb('lazydb.pk') as db:
 
