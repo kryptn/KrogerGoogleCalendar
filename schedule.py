@@ -1,17 +1,17 @@
-from pyvirtualdisplay import Display
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from bs4 import BeautifulSoup
-from apiclient.discovery import build
-from httplib2 import Http
-from oauth2client import client
-from functools import wraps
-from contextlib import contextmanager
-import oauth2client
-import datetime
-import pickle
-import json
 import re
+import json
+import pickle
+from httplib2 import Http
+from functools import wraps
+from datetime import datetime
+from contextlib import contextmanager
+
+from oauth2client.client import SignedJwtAssertionCredentials
+from selenium.webdriver.common.keys import Keys
+from selenium import webdriver
+from pyvirtualdisplay import Display
+from apiclient.discovery import build
+from bs4 import BeautifulSoup
 
 with open('settings.json') as f:
     SETTINGS = json.loads(f.read())
@@ -39,9 +39,7 @@ def make_datetime(dates, times):
     dt['hour'] = times[0]
     dt['minute'] = times[1]
 
-    return datetime.datetime(**dt)
-
-    
+    return datetime(**dt)
 
 def build_event(start, end):
     """ Builds calendar object to pass to the api """
@@ -55,13 +53,12 @@ def build_event(start, end):
              }
     return event
 
-
 def api_service(endpoint, version):
     """ Builds service object to interface with the google api """
     with open(SETTINGS['P12_KEY_FILE']) as f:
         private_key = f.read()
 
-    creds = client.SignedJwtAssertionCredentials(
+    creds = SignedJwtAssertionCredentials(
             SETTINGS['GSERVEMAIL'],
             private_key,
             SETTINGS['SCOPE'])
@@ -117,7 +114,7 @@ def parse_calendar(soup):
     """
     schema = ('date','time','duration')
     sched = {}
-    now = datetime.datetime.now()
+    now = datetime.now()
     for day in soup.find_all('li', class_=re.compile('[1-7]')):
         d = list(day.stripped_strings)
         if len(d) > 1:
@@ -165,7 +162,7 @@ def add_event(day):
     return day
 
 def update():
-    now = datetime.datetime.now()
+    now = datetime.now()
     schedule = get_schedule()
     
     with lazydb('lazydb.pk') as db:
