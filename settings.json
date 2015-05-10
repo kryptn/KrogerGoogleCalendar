@@ -6,6 +6,6 @@
     "GSERVEMAIL": "probablysomething@developer.gserviceaccount.com", 
     
     "SCOPE": "https://www.googleapis.com/auth/calendar",
-    "LOCATION": "Text description of location"
+    "LOCATION": "Text description of location",
     "TIMEZONE": "America/Los_Angeles"
 }
