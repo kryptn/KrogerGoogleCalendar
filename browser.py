@@ -7,7 +7,7 @@ from pyvirtualdisplay import Display
 from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 
-from utils import make_datetime
+from utils import make_datetime, lazydb
 
 @contextmanager
 def driver():
@@ -96,7 +96,21 @@ class KrogerBrowser(object):
             soup = BeautifulSoup(browser.page_source)
         return soup
 
+    def update_schedule(self, schedule):
+        now = datetime.now()
+        
+        with lazydb('lazydb.pk') as db:
+            for k, v in db.items():
+                if v['start'] < now:
+                    if self.DEBUG: print "Old event removed", v['start']
+                    del db[k]
+            for k, v in schedule.items():
+                if k not in db.keys():
+                    if self.DEBUG: print "New event inserted", v['start']
+                    db[k] = v
+                else:
+                    if self.DEBUG: print "Event exists", v['id']
+
     def pull(self):
         soup = self.get_schedule_source()
         schedule = self.parse_calendar(soup)
-        return schedule

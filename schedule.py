@@ -1,8 +1,6 @@
 import json
-import pickle
 from httplib2 import Http
 from functools import wraps
-from datetime import datetime
 
 from oauth2client.client import SignedJwtAssertionCredentials
 from apiclient.discovery import build
@@ -31,10 +29,9 @@ def api_service(endpoint, version):
     with open(SETTINGS['P12_KEY_FILE']) as f:
         private_key = f.read()
 
-    creds = SignedJwtAssertionCredentials(
-            SETTINGS['GSERVEMAIL'],
-            private_key,
-            SETTINGS['SCOPE'])
+    creds = SignedJwtAssertionCredentials(SETTINGS['GSERVEMAIL'],
+                                          private_key,
+                                          SETTINGS['SCOPE'])
 
     service = build(endpoint, version, http=creds.authorize(Http()))
     return service
@@ -47,24 +44,20 @@ def add_event(day):
     return day
 
 def update():
-    now = datetime.now()
-    browser = KrogerBrowser(SETTINGS['EUID'], SETTINGS['PASSWORD'])
-    schedule = browser.pull()
+    browser = KrogerBrowser(SETTINGS['EUID'], SETTINGS['PASSWORD'],DEBUG=DEBUG)
+    browser.pull()
     
     with lazydb('lazydb.pk') as db:
 
         for k, v in db.items():
-            if v['start'] < now:
-                if DEBUG: print "Old event being removed", v['start']
-                del db[k]
+            if not v['id']:
+                if DEBUG: print "Adding new event...",
+                result = add_event(v['start'],v['end'])
+                db[k]['id'] = result['id']
+                if DEBUG: print "Success", result['id']
 
-        for k, v in schedule.items():
-            if k not in db.keys():
-                r = add_event(v)
-                if DEBUG: print "New event inserted", r['start']
-                db[k] = r
-            else:
-                if DEBUG: print "Event already exists", k
+
+
 DEBUG = True
 
 
