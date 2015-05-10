@@ -31,6 +31,7 @@ class KrogerBrowser(object):
 
     main_url = 'http://greatpeople.me'
     schedule_url = 'https://vpnb-cdc.kroger.com/EmpowerESS/,DanaInfo=wfm.kroger.com+Schedule.aspx'
+    DEBUG = False
 
     def __init__(self, euid, password, **kwargs):
         self.euid = euid
@@ -42,6 +43,9 @@ class KrogerBrowser(object):
         if 'schedule_url' in kwargs.keys():
             self.schedule_url = kwargs['schedule_url']
 
+        if 'DEBUG' in kwargs.keys():
+            self.DEBUG = True
+
     def login(self, browser):
         """ Enters relevant info into the login page """
         browser.find_element_by_name('KSWUSER').send_keys(self.euid)
@@ -52,6 +56,11 @@ class KrogerBrowser(object):
         """ Attempts to fix a multiple-session error from the Juniper switch """
         browser.find_element_by_name('postfixSID').click()
         browser.find_element_by_name('btnContinue').click()
+
+    def navigate(self, browser, url):
+        browser.get(url)
+        if self.DEBUG:
+            print browser.title
 
     def parse_calendar(self, soup):
         """
@@ -75,9 +84,7 @@ class KrogerBrowser(object):
 
         return sched
 
-    def navigate(self, browser, url):
-        browser.get(url)
-        #possible debug statement here
+
 
     def get_schedule_source(self):
         with driver() as browser:
