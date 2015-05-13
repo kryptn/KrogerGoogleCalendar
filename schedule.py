@@ -1,6 +1,8 @@
 import json
+import argparse
 from httplib2 import Http
 from functools import wraps
+
 
 from oauth2client.client import SignedJwtAssertionCredentials
 from apiclient.discovery import build
@@ -56,10 +58,11 @@ def update():
                 db[k]['id'] = result['id']
                 if DEBUG: print "Success", result['id']
 
-
-
-DEBUG = True
-
-
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Adds kroger work schedule to google calendar')
     
+    parser.add_argument('--debug', action='store_true', default=False, help='sets debug state')
+    args = parser.parse_args()
 
+    DEBUG = args.debug
+    update()
