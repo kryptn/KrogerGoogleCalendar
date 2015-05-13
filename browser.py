@@ -109,8 +109,9 @@ class KrogerBrowser(object):
                     if self.DEBUG: print "New event inserted", v['start']
                     db[k] = v
                 else:
-                    if self.DEBUG: print "Event exists", v['id']
+                    if self.DEBUG: print "Event exists", db[k]['start']
 
     def pull(self):
         soup = self.get_schedule_source()
         schedule = self.parse_calendar(soup)
+        self.update_schedule(schedule)
