@@ -4,7 +4,6 @@ from contextlib import contextmanager
 
 from bs4 import BeautifulSoup
 from pyvirtualdisplay import Display
-from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 
 from utils import make_datetime, lazydb

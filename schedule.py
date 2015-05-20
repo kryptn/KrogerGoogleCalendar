@@ -1,8 +1,6 @@
 import json
 import argparse
 from httplib2 import Http
-from functools import wraps
-
 
 from oauth2client.client import SignedJwtAssertionCredentials
 from apiclient.discovery import build
@@ -45,24 +43,29 @@ def add_event(day):
     day['id'] = created['id']
     return day
 
-def update():
-    browser = KrogerBrowser(SETTINGS['EUID'], SETTINGS['PASSWORD'],DEBUG=DEBUG)
+def pull_from_greatpeople(user,password):
+    browser = KrogerBrowser(user, password,DEBUG=DEBUG)
     browser.pull()
-    
-    with lazydb('lazydb.pk') as db:
 
+def update():
+    with lazydb('lazydb.pk') as db:
         for k, v in db.items():
             if not v['id']:
                 if DEBUG: print "Adding new event...",
-                result = add_event(v['start'],v['end'])
+                result = add_event(v)
                 db[k]['id'] = result['id']
                 if DEBUG: print "Success", result['id']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Adds kroger work schedule to google calendar')
-    
+
+    parser.add_argument('--calendar', action='store_true', default=False, help='Only updates calendar')
     parser.add_argument('--debug', action='store_true', default=False, help='sets debug state')
+
     args = parser.parse_args()
 
     DEBUG = args.debug
+
+    if not args.calendar:
+        pull_from_greatpeople(SETTINGS['EUID'],SETTINGS['PASSWORD'])
     update()
