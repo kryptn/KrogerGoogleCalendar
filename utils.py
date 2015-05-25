@@ -5,8 +5,13 @@ import pickle
 @contextmanager
 def lazydb(filename):
     # check if file exists
-    with open(filename) as f:
-        db = pickle.load(f)
+    try:
+        with open(filename) as f:
+            db = pickle.load(f)
+    except IOError:
+        with open(filename, 'w') as f:
+            db = {}
+            pickle.dump(db, f)
 
     yield db
     
