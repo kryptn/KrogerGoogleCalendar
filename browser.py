@@ -74,16 +74,16 @@ class KrogerBrowser(object):
             if len(d) > 1:
                 d = dict(zip(schema, d))
                 r = {}
-                start, end = d['time'].split('-')
-                r['start'] = make_datetime(d['date'], start)
-                r['end'] = make_datetime(d['date'], end)
-                r['id'] = None
-                if r['start'] > now:
-                    sched[d['date']] = r
+                if '-' in d['time']: #make sure there's actually a scheduled day
+                    start, end = d['time'].split('-')
+                    r['start'] = make_datetime(d['date'], start)
+                    r['end'] = make_datetime(d['date'], end)
+                    r['duration'] = d['duration']
+                    r['id'] = None
+                    if r['start'] > now:
+                        sched[d['date']] = r
 
         return sched
-
-
 
     def get_schedule_source(self):
         with driver() as browser:
@@ -111,6 +111,6 @@ class KrogerBrowser(object):
                     if self.DEBUG: print "Event exists", db[k]['start']
 
     def pull(self):
-        soup = self.get_schedule_source()
-        schedule = self.parse_calendar(soup)
-        self.update_schedule(schedule)
+        self.soup = self.get_schedule_source()
+        self.schedule = self.parse_calendar(self.soup)
+        self.update_schedule(self.schedule)
