@@ -29,7 +29,7 @@ def driver():
 class KrogerBrowser(object):
 
     main_url = 'http://greatpeople.me'
-    schedule_url = 'https://vpnb-cdc.kroger.com/EmpowerESS/,DanaInfo=wfm.kroger.com+Schedule.aspx'
+    schedule_url = 'https://vpnb-hdc.kroger.com/EmpowerESS/,DanaInfo=myeschedule.kroger.com+Schedule.aspx'
     DEBUG = False
 
     def __init__(self, euid, password, **kwargs):
@@ -74,11 +74,10 @@ class KrogerBrowser(object):
             if len(d) > 1:
                 d = dict(zip(schema, d))
                 r = {}
-                if '-' in d['time']: #make sure there's actually a scheduled day
-                    start, end = d['time'].split('-')
+                if '-' in d['time']:
+                    start, end = d['time'].replace(' ', '').split('-')
                     r['start'] = make_datetime(d['date'], start)
                     r['end'] = make_datetime(d['date'], end)
-                    r['duration'] = d['duration']
                     r['id'] = None
                     if r['start'] > now:
                         sched[d['date']] = r

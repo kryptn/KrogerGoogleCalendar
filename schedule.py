@@ -43,6 +43,10 @@ def add_event(day):
     day['id'] = created['id']
     return day
 
+def pull_from_greatpeople(user,password):
+    browser = KrogerBrowser(user, password,DEBUG=DEBUG)
+    browser.pull()
+
 def update():
     with lazydb('lazydb.pk') as db:
         for k, v in db.items():
@@ -55,14 +59,14 @@ def update():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Adds kroger work schedule to google calendar')
 
+    parser.add_argument('-i', action='store_true', default=False, help='Interactive prompt')
     parser.add_argument('--calendar', action='store_true', default=False, help='Only updates calendar')
     parser.add_argument('--debug', action='store_true', default=False, help='sets debug state')
 
     args = parser.parse_args()
+
     DEBUG = args.debug
 
-    browser = KrogerBrowser(SETTINGS['EUID'], SETTINGS['PASSWORD'], DEBUG=DEBUG)
-
     if not args.calendar:
-        browser.pull()
+        pull_from_greatpeople(SETTINGS['EUID'],SETTINGS['PASSWORD'])
     update()

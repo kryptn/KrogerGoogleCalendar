@@ -2,6 +2,7 @@ from datetime import datetime
 from contextlib import contextmanager
 import pickle
 
+
 @contextmanager
 def lazydb(filename):
     # check if file exists
@@ -10,18 +11,20 @@ def lazydb(filename):
             db = pickle.load(f)
     except IOError:
         with open(filename, 'w') as f:
+            print 'ioerrer'
             db = {}
             pickle.dump(db, f)
-
     yield db
-    
-    with open(filename,'w') as f:
+
+    with open(filename, 'w') as f:
         pickle.dump(db, f)
 
+
 def make_datetime(date, time):
-    dt = {'year':2015,
-          'month':int(date.split('/')[0]),
-          'day':int(date.split('/')[1])}
+    print date, time
+    dt = {'year': 2015,
+          'month': int(date.split('/')[0]),
+          'day': int(date.split('/')[1])}
     ampm = time[-1]
     time = [int(x) for x in time[:-1].split(':')]
     if ampm == 'p' and time[0] is not 12:
