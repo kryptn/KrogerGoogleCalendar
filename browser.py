@@ -59,7 +59,7 @@ class KrogerBrowser(object):
     def navigate(self, browser, url):
         browser.get(url)
         if self.DEBUG:
-            print browser.title
+            print browser.title.encode('utf8')
 
     def parse_calendar(self, soup):
         """
