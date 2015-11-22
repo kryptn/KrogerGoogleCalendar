@@ -8,7 +8,7 @@ from apiclient.discovery import build
 from browser import KrogerBrowser
 from utils import lazydb
 
-with open('settings.json') as f:
+with open('data/settings.json') as f:
     SETTINGS = json.loads(f.read())
 
 def build_event(start, end):
@@ -26,7 +26,7 @@ def build_event(start, end):
 
 def api_service(endpoint, version):
     """ Builds service object to interface with the google api """
-    with open(SETTINGS['P12_KEY_FILE']) as f:
+    with open('data/'+SETTINGS['P12_KEY_FILE']) as f:
         private_key = f.read()
 
     creds = SignedJwtAssertionCredentials(SETTINGS['GSERVEMAIL'],
