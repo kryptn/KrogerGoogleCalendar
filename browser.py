@@ -27,6 +27,20 @@ def driver():
 
 
 class KrogerBrowser(object):
+    """
+    Object to handle the browser and selenium driver to simulate logging
+    into the website.
+
+    Required arguments:
+     - euid: user ID
+     - password: password for euid
+
+    Optional arguments:
+      - main_url: main page url
+      - schedule_url: url for the direct schedule
+      - DEBUG: debug boolean
+
+    """
 
     main_url = 'http://greatpeople.me'
     schedule_url = 'https://vpnb-hdc.kroger.com/EmpowerESS/,DanaInfo=myeschedule.kroger.com+Schedule.aspx'
@@ -46,7 +60,12 @@ class KrogerBrowser(object):
             self.DEBUG = True
 
     def login(self, browser):
-        """ Enters relevant info into the login page """
+        """ 
+        Sends user information to the main login page. Information isn't sent anywhere else.
+
+        Final part of the user detail pipeline.
+
+        """
         browser.find_element_by_name('KSWUSER').send_keys(self.euid)
         browser.find_element_by_name('PWD').send_keys(self.password)
         browser.find_element_by_class_name('btn').click()
@@ -85,6 +104,13 @@ class KrogerBrowser(object):
         return sched
 
     def get_schedule_source(self):
+        """
+        Runs the browser object.
+
+        Logs in, navigates to schedule, scrapes, and closes browser.
+
+        """
+
         with driver() as browser:
             self.navigate(browser, self.main_url)
             self.login(browser)
@@ -95,6 +121,11 @@ class KrogerBrowser(object):
         return soup
 
     def update_schedule(self, schedule):
+        """
+        Updates the lazydb object with newly detected shifts to avoid adding
+        already existing shifts to the calendar
+
+        """
         now = datetime.now()
         
         with lazydb('lazydb.pk') as db:
@@ -110,6 +141,7 @@ class KrogerBrowser(object):
                     if self.DEBUG: print "Event exists", db[k]['start']
 
     def pull(self):
+        """ Pulls source, updates into schedule file """
         self.soup = self.get_schedule_source()
         self.schedule = self.parse_calendar(self.soup)
         self.update_schedule(self.schedule)

@@ -37,17 +37,29 @@ def api_service(endpoint, version):
     return service
 
 def add_event(day):
+    """ Adds json event built by `build_event` to the google calendar """
     calendar = api_service('calendar','v3')
     event = build_event(day['start'],day['end'])
     created = calendar.events().insert(calendarId='primary',body=event).execute()
     day['id'] = created['id']
     return day
 
-def pull_from_greatpeople(user,password):
+def pull_schedule(user,password):
+    """
+    Pulls the schedule data from the website.
+
+    Part of the user detail pipeline detailed in the README
+
+    """
     browser = KrogerBrowser(user, password,DEBUG=DEBUG)
     browser.pull()
 
 def update():
+    """ 
+    Updates the user's google calendar with any entry in the lazydb without an
+    id set.
+
+    """
     with lazydb('lazydb.pk') as db:
         for k, v in db.items():
             if not v['id']:
@@ -68,5 +80,5 @@ if __name__ == "__main__":
     DEBUG = args.debug
 
     if not args.calendar:
-        pull_from_greatpeople(SETTINGS['EUID'],SETTINGS['PASSWORD'])
+        pull_schedule(SETTINGS['EUID'],SETTINGS['PASSWORD'])
     update()
