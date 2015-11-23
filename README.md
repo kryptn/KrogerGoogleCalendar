@@ -5,7 +5,7 @@ their relative kroger store's work schedule using greatpeople.me
 
 ## Installation
 
-Easiest is to use [this repo](https://github.com/kroger/kgc) and follow the instructions.
+Easiest is to use [this repo](https://github.com/kryptn/kgc) and follow the instructions.
 
 It's still not easy.
 
