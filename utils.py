@@ -6,6 +6,7 @@ import pickle
 @contextmanager
 def lazydb(filename):
     # check if file exists
+    filename = 'data/'+filename
     try:
         with open(filename) as f:
             db = pickle.load(f)
