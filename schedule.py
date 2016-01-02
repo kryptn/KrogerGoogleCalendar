@@ -60,7 +60,7 @@ def update():
     id set.
 
     """
-    with lazydb('lazydb.pk') as db:
+    with lazydb('data/lazydb.pk') as db:
         for k, v in db.items():
             if not v['id']:
                 if DEBUG: print "Adding new event...",
