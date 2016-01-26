@@ -128,7 +128,7 @@ class KrogerBrowser(object):
         """
         now = datetime.now()
         
-        with lazydb('lazydb.pk') as db:
+        with lazydb('data/lazydb.pk') as db:
             for k, v in db.items():
                 if v['start'] < now:
                     if self.DEBUG: print "Old event removed", v['start']
