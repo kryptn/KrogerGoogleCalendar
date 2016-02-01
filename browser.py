@@ -17,7 +17,7 @@ def driver():
     """
 
     try:
-        display = Display(visible=0, size=(800,600))
+        display = Display(visible=0, size=(800, 600))
         display.start()
         browser = webdriver.Firefox()
         yield browser
@@ -78,17 +78,17 @@ class KrogerBrowser(object):
     def navigate(self, browser, url):
         browser.get(url)
         if self.DEBUG:
-            print browser.title.encode('utf8')
+            print(browser.title.encode('utf8'))
 
-    def parse_calendar(self, soup):
+    def parse_calendar(self):
         """
         Parses the calendar found after logging in
         regex is to get only the day items, which have class%d in their classes
         """
-        schema = ('date','time','duration')
-        sched = {}
+        schema = ('date', 'time', 'duration')
+        self.sched = {}
         now = datetime.now()
-        for day in soup.find_all('li', class_=re.compile('[1-7]')):
+        for day in self.soup.find_all('li', class_=re.compile('[1-7]')):
             d = list(day.stripped_strings)
             if len(d) > 1:
                 d = dict(zip(schema, d))
@@ -99,9 +99,7 @@ class KrogerBrowser(object):
                     r['end'] = make_datetime(d['date'], end)
                     r['id'] = None
                     if r['start'] > now:
-                        sched[d['date']] = r
-
-        return sched
+                        self.sched[d['date']] = r
 
     def get_schedule_source(self):
         """
@@ -118,22 +116,23 @@ class KrogerBrowser(object):
                 self.fix_sessions(browser)
             self.navigate(browser, self.schedule_url)
             soup = BeautifulSoup(browser.page_source)
-        return soup
 
-    def update_schedule(self, schedule):
+        self.soup = soup
+
+    def update_schedule(self):
         """
         Updates the lazydb object with newly detected shifts to avoid adding
         already existing shifts to the calendar
 
         """
         now = datetime.now()
-        
+
         with lazydb('data/lazydb.pk') as db:
             for k, v in db.items():
                 if v['start'] < now:
                     if self.DEBUG: print "Old event removed", v['start']
                     del db[k]
-            for k, v in schedule.items():
+            for k, v in self.schedule.items():
                 if k not in db.keys():
                     if self.DEBUG: print "New event inserted", v['start']
                     db[k] = v
@@ -142,6 +141,6 @@ class KrogerBrowser(object):
 
     def pull(self):
         """ Pulls source, updates into schedule file """
-        self.soup = self.get_schedule_source()
-        self.schedule = self.parse_calendar(self.soup)
-        self.update_schedule(self.schedule)
+        self.get_schedule_source()
+        self.parse_calendar()
+        self.update_schedule()
