@@ -116,7 +116,8 @@ class KrogerBrowser(object):
             r['start'] = make_datetime(d['date'], start)
             r['end'] = make_datetime(d['date'], end)
             r['id'] = None
-            self.schedule[d['date']] = r
+            if r['start'] > now:
+                self.schedule[d['date']] = r
 
     def get_schedule_source(self):
         """
