@@ -4,9 +4,9 @@ from httplib2 import Http
 
 from oauth2client.client import SignedJwtAssertionCredentials
 from apiclient.discovery import build
+from pantry import pantry
 
 from browser import KrogerBrowser
-from utils import lazydb
 
 with open('data/settings.json') as f:
     SETTINGS = json.loads(f.read())
@@ -44,41 +44,26 @@ def add_event(day):
     day['id'] = created['id']
     return day
 
-def pull_schedule(user,password):
+def pull_schedule(user,password,debug):
     """
     Pulls the schedule data from the website.
 
     Part of the user detail pipeline detailed in the README
 
     """
-    browser = KrogerBrowser(user, password,DEBUG=DEBUG)
+    browser = KrogerBrowser(user, password,DEBUG=debug)
     browser.pull()
 
-def update():
+def update(debug=None):
     """ 
     Updates the user's google calendar with any entry in the lazydb without an
     id set.
 
     """
-    with lazydb('data/lazydb.pk') as db:
+    with pantry('data/lazydb.pk') as db:
         for k, v in db.items():
             if not v['id']:
-                if DEBUG: print "Adding new event...",
+                if debug: print "Adding new event...",
                 result = add_event(v)
                 db[k]['id'] = result['id']
-                if DEBUG: print "Success", result['id']
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Adds kroger work schedule to google calendar')
-
-    parser.add_argument('-i', action='store_true', default=False, help='Interactive prompt')
-    parser.add_argument('--calendar', action='store_true', default=False, help='Only updates calendar')
-    parser.add_argument('--debug', action='store_true', default=False, help='sets debug state')
-
-    args = parser.parse_args()
-
-    DEBUG = args.debug
-
-    if not args.calendar:
-        pull_schedule(SETTINGS['EUID'],SETTINGS['PASSWORD'])
-    update()
+                if debug: print "Success", result['id']

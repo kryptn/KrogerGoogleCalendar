@@ -18,4 +18,4 @@ It's still not easy.
 * sent to website through `KrogerBrowser.login`
 
 ## Use ##
-    python schedule.py [--calendar] [--debug]
+    python update.py [--calendar] [--debug]

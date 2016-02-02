@@ -5,8 +5,8 @@ from contextlib import contextmanager
 from bs4 import BeautifulSoup
 from pyvirtualdisplay import Display
 from selenium import webdriver
+from pantry import pantry
 
-from utils import make_datetime, lazydb
 
 @contextmanager
 def driver():
@@ -24,6 +24,22 @@ def driver():
     finally:
         browser.quit()
         display.stop()
+
+def make_datetime(date, time):
+    print date, time
+    dt = {'year': 2015,
+          'month': int(date.split('/')[0]),
+          'day': int(date.split('/')[1])}
+    ampm = time[-1]
+    time = [int(x) for x in time[:-1].split(':')]
+    if ampm == 'p' and time[0] is not 12:
+        time[0] = time[0]+12
+    elif ampm == 'a' and time[0] is 12:
+        time[0] = 0
+    dt['hour'] = time[0]
+    dt['minute'] = time[1]
+
+    return datetime(**dt)
 
 
 class KrogerBrowser(object):
@@ -49,6 +65,7 @@ class KrogerBrowser(object):
     def __init__(self, euid, password, **kwargs):
         self.euid = euid
         self.password = password
+        self.schedule = {}
 
         if 'main_url' in kwargs.keys():
             self.main_url = kwargs['main_url']
@@ -73,6 +90,7 @@ class KrogerBrowser(object):
     def fix_sessions(self, browser):
         """ Attempts to fix a multiple-session error from the Juniper switch """
         browser.find_element_by_name('postfixSID').click()
+        browser.implicitly_wait(5)
         browser.find_element_by_name('btnContinue').click()
 
     def navigate(self, browser, url):
@@ -85,21 +103,20 @@ class KrogerBrowser(object):
         Parses the calendar found after logging in
         regex is to get only the day items, which have class%d in their classes
         """
-        schema = ('date', 'time', 'duration')
-        self.sched = {}
+        schema = ('date', 'time')
         now = datetime.now()
-        for day in self.soup.find_all('li', class_=re.compile('[1-7]')):
-            d = list(day.stripped_strings)
-            if len(d) > 1:
-                d = dict(zip(schema, d))
-                r = {}
-                if '-' in d['time']:
-                    start, end = d['time'].replace(' ', '').split('-')
-                    r['start'] = make_datetime(d['date'], start)
-                    r['end'] = make_datetime(d['date'], end)
-                    r['id'] = None
-                    if r['start'] > now:
-                        self.sched[d['date']] = r
+
+        days = self.soup.find_all('li', class_=re.compile('[1-7]'))
+        days = [list(x.stripped_strings) for x in days]
+        days = [dict(zip(schema,x)) for x in days if len(x) > 1]
+
+        for d in days:
+            r = {}
+            start, end = d['time'].replace(' ', '').split('-')
+            r['start'] = make_datetime(d['date'], start)
+            r['end'] = make_datetime(d['date'], end)
+            r['id'] = None
+            self.schedule[d['date']] = r
 
     def get_schedule_source(self):
         """
@@ -111,13 +128,14 @@ class KrogerBrowser(object):
 
         with driver() as browser:
             self.navigate(browser, self.main_url)
-            self.login(browser)
+            if 'Home' not in browser.title:
+                self.login(browser)
+
             if 'Confirm' in browser.title:
                 self.fix_sessions(browser)
+            
             self.navigate(browser, self.schedule_url)
-            soup = BeautifulSoup(browser.page_source)
-
-        self.soup = soup
+            self.soup = BeautifulSoup(browser.page_source)
 
     def update_schedule(self):
         """
@@ -127,7 +145,7 @@ class KrogerBrowser(object):
         """
         now = datetime.now()
 
-        with lazydb('data/lazydb.pk') as db:
+        with pantry('data/lazydb.pk') as db:
             for k, v in db.items():
                 if v['start'] < now:
                     if self.DEBUG: print "Old event removed", v['start']
