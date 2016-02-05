@@ -26,7 +26,6 @@ def driver():
         display.stop()
 
 def make_datetime(date, time):
-    print date, time
     dt = {'year': 2016,
           'month': int(date.split('/')[0]),
           'day': int(date.split('/')[1])}
